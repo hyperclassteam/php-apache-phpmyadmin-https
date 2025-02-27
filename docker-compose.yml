@@ -1,0 +1,44 @@
+services:
+  web:
+    build:
+      context: ./php
+    container_name: lamp_www
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./www:/var/www/html
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+      - ./certificates://etc/ssl/certs
+      - ./apache_conf:/etc/apache2/sites-available
+    user: 1000:1000
+    depends_on:
+      - dbenv
+    environment:
+      - COMPOSER_HOME=/var/www/.composer
+
+  dbenv:
+    image: mysql:8.0
+    container_name: lamp_db
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: default_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user_password
+    volumes:
+      - ./mysql:/docker-entrypoint-initdb.d
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links: 
+      - dbenv
+    ports:
+      - "8080:80"
+    depends_on:
+      - dbenv
+    environment:
+      PMA_HOST: dbenv
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user_password
+    restart: always   
+
